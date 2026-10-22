@@ -1,0 +1,24 @@
+[
+ {
+  "doctype": "Custom Field",
+  "dt": "Purchase Order Item",
+  "fieldname": "purchase_order_schedule_section",
+  "fieldtype": "Section Break",
+  "insert_after": "job_card",
+  "is_system_generated": 0,
+  "label": "Purchase Order Schedule",
+  "module": "Purchase Schedule app",
+  "name": "Purchase Order Item-purchase_order_schedule_section"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Purchase Order Item",
+  "fieldname": "add_schedule",
+  "fieldtype": "Button",
+  "insert_after": "purchase_order_schedule_section",
+  "is_system_generated": 0,
+  "label": "Add Schedule",
+  "module": "Purchase Schedule app",
+  "name": "Purchase Order Item-add_schedule"
+ }
+]

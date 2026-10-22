@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["erpnext"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -53,6 +53,7 @@ app_license = "mit"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"Purchase Order": "public/js/purchase_order.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_kanban_js = {"doctype" : "public/js/doctype_kanban.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -153,6 +154,26 @@ app_license = "mit"
 # Document Events
 # ---------------
 # Hook on document methods and events
+
+doc_events = {
+	"Purchase Order": {
+		"validate": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.validate_scheduled_qty",
+		"on_submit": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_removed_schedule_items",
+		"on_cancel": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_all_schedule_items",
+		"on_trash": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_all_schedule_items",
+	}
+}
+
+override_doctype_dashboards = {
+	"Purchase Order": "purchase_schedule.purchase_schedule_app.purchase_order_dashboard.get_data",
+}
+
+fixtures = [
+	{
+		"dt": "Custom Field",
+		"filters": [["module", "=", "Purchase Schedule app"]],
+	}
+]
 
 # doc_events = {
 # 	"*": {
