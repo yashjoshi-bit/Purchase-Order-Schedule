@@ -18,7 +18,7 @@ purchase_schedule.po_schedule = {
 		const me = this;
 
 		const dialog = new frappe.ui.Dialog({
-			title: __("Purchase Schedule for {0}", [row.item_code]),
+			title: __("Purchase Receipt Schedule for {0}", [row.item_code]),
 			size: "large",
 			fields: [
 				{
@@ -52,7 +52,7 @@ purchase_schedule.po_schedule = {
 				{
 					fieldtype: "Button",
 					fieldname: "get_purchase_schedule",
-					label: __("Get Purchase Schedule"),
+					label: __("Get Purchase Receipt Schedule"),
 					click: () => {
 						if (!row.uom) {
 							me.generate_rows(dialog, row, 0);
@@ -66,7 +66,7 @@ purchase_schedule.po_schedule = {
 				{
 					fieldtype: "Table",
 					fieldname: "purchase_schedule",
-					label: __("Purchase Schedule"),
+					label: __("Purchase Receipt Schedule"),
 					data: [],
 					fields: [
 						{
@@ -115,7 +115,7 @@ purchase_schedule.po_schedule = {
 		const no_of_receipts = cint(dialog.get_value("no_of_receipts"));
 
 		if (!frequency) {
-			frappe.throw(__("Please select a frequency for the purchase schedule"));
+			frappe.throw(__("Please select a frequency for the purchase receipt schedule"));
 		}
 		if (!schedule_date) {
 			frappe.throw(__("Please enter the first Required By date"));
@@ -173,7 +173,7 @@ purchase_schedule.po_schedule = {
 
 		if (flt(total_qty, this.qty_precision(row)) > flt(row.qty)) {
 			frappe.throw(
-				__("Total quantity in purchase schedule cannot be greater than the item quantity")
+				__("Total quantity in purchase receipt schedule cannot be greater than the item quantity")
 			);
 		}
 
@@ -190,7 +190,7 @@ purchase_schedule.po_schedule = {
 				})),
 			},
 			freeze: true,
-			freeze_message: __("Creating Purchase Schedule..."),
+			freeze_message: __("Creating Purchase Receipt Schedule..."),
 			callback: (r) => {
 				if (!r.exc) {
 					dialog.hide();
@@ -223,7 +223,7 @@ frappe.ui.form.on("Purchase Order Item", {
 		const row = locals[cdt][cdn];
 
 		if (row.__islocal || frm.is_dirty()) {
-			frappe.throw(__("Please save the Purchase Order before adding a purchase schedule."));
+			frappe.throw(__("Please save the Purchase Order before adding a purchase receipt schedule."));
 		}
 
 		frappe.call({
