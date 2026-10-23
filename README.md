@@ -14,15 +14,9 @@ cd ~/frappe-bench-v16
 
 # 2. download the app into the bench
 bench get-app https://github.com/yashjoshi-bit/Purchase-Order-Schedule.git --branch main
-
-# 3. install it on your site (creates the Purchase Receipt Schedule doctype + custom fields)
 bench --site your-site-name install-app purchase_schedule
-
-# 4. apply changes, build assets and restart
 bench --site your-site-name migrate
-bench build --app purchase_schedule
-bench --site your-site-name clear-cache
-bench restart   # production only; in development, restart `bench start`
+
 ```
 
 Replace `your-site-name` with your site, e.g. `erpnext-v16.local`.
