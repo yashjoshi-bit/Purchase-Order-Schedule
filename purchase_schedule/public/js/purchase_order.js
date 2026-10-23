@@ -213,7 +213,7 @@ frappe.ui.form.on("Purchase Order", {
 		frm.fields_dict.items.grid.update_docfield_property(
 			"add_schedule",
 			"hidden",
-			frm.doc.docstatus !== 1
+			frm.is_new() || frm.doc.docstatus === 2
 		);
 	},
 });
@@ -222,10 +222,10 @@ frappe.ui.form.on("Purchase Order Item", {
 	add_schedule(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 
-		if (frm.doc.docstatus !== 1) {
-			frappe.throw(__("Please submit the Purchase Order before adding a purchase receipt schedule."));
+		if (frm.doc.docstatus === 2) {
+			frappe.throw(__("Cannot add a purchase receipt schedule to a cancelled Purchase Order."));
 		}
-		if (frm.is_dirty()) {
+		if (row.__islocal || frm.is_dirty()) {
 			frappe.throw(__("Please save the Purchase Order before adding a purchase receipt schedule."));
 		}
 

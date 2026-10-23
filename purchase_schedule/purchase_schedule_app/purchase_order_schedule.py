@@ -7,7 +7,7 @@ Mirrors ERPNext's Sales Order "Delivery Schedule" (Delivery Schedule Item), but 
 Purchase Order, implemented through hooks (no core override):
 
 - get_purchase_schedule / create_purchase_schedule: whitelisted, used by the Add Schedule dialog
-  on a submitted Purchase Order.
+  on a saved draft or submitted Purchase Order.
 - validate_scheduled_qty: Purchase Order `validate` / `before_update_after_submit` (Update Items)
   — scheduled qty must not exceed item qty.
 - delete_removed_schedule_items: Purchase Order `on_submit` / `on_update_after_submit`
@@ -38,11 +38,11 @@ def get_purchase_schedule(purchase_order: str, purchase_order_item: str) -> list
 
 @frappe.whitelist(methods=["POST"])
 def create_purchase_schedule(purchase_order: str, purchase_order_item: str, schedules) -> None:
-	"""Replace the schedule of one submitted Purchase Order Item with `schedules`.
+	"""Replace the schedule of one Purchase Order Item (draft or submitted) with `schedules`.
 
 	`schedules` is a list of {"schedule_date", "qty", "name" (optional, existing row)}.
 	Sets the item's Required By date (allow on submit) to the earliest scheduled date
-	and saves the PO as an update-after-submit.
+	and saves the PO (a normal save for drafts, update-after-submit once submitted).
 	"""
 	if isinstance(schedules, str):
 		schedules = parse_json(schedules)
@@ -50,8 +50,8 @@ def create_purchase_schedule(purchase_order: str, purchase_order_item: str, sche
 	po = frappe.get_doc("Purchase Order", purchase_order)
 	po.check_permission("write")
 
-	if po.docstatus != 1:
-		frappe.throw(_("Schedule can only be added after the Purchase Order is submitted."))
+	if po.docstatus == 2:
+		frappe.throw(_("Schedule cannot be changed on a cancelled Purchase Order."))
 
 	item = next((d for d in po.items if d.name == purchase_order_item), None)
 	if not item:

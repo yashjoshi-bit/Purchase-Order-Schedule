@@ -32,7 +32,7 @@ bench --site your-site-name clear-cache
 
 ### Usage
 
-1. Open a submitted Purchase Order and click the edit icon on an item row.
+1. Open a saved (draft) or submitted Purchase Order and click the edit icon on an item row.
 2. Click **Add Schedule**, set First Required By Date, Frequency and No of Receipts, then **Get Purchase Receipt Schedule**.
 3. Adjust rows if needed and click **Add Schedule**.
 4. View schedules on the Purchase Order's **Connections** tab (Schedule → Purchase Receipt Schedule) or at `/app/purchase-receipt-schedule`.

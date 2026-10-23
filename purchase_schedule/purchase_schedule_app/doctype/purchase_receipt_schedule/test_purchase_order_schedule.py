@@ -152,8 +152,24 @@ class TestPurchaseOrderSchedule(IntegrationTestCase):
 			"schedule_date": str(item.schedule_date),
 		}
 
-	def test_draft_po_is_rejected(self):
+	def test_draft_po_allows_schedule(self):
 		po = self.make_po(qty=10, submit=False)
+		rows = self.schedule(po, po.items[0], [{"schedule_date": add_days(nowdate(), 5), "qty": 4}])
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(po.docstatus, 0)
+		self.assertEqual(getdate(po.items[0].schedule_date), getdate(add_days(nowdate(), 5)))
+
+	def test_draft_schedule_is_kept_on_submit(self):
+		po = self.make_po(qty=10, submit=False)
+		self.schedule(po, po.items[0], [{"schedule_date": add_days(nowdate(), 5), "qty": 4}])
+		po.submit()
+
+		self.assertEqual(self.count_rows(po), 1)
+
+	def test_cancelled_po_is_rejected(self):
+		po = self.make_po(qty=10)
+		po.cancel()
 		with self.assertRaises(frappe.ValidationError):
 			create_purchase_schedule(
 				po.name, po.items[0].name, [{"schedule_date": add_days(nowdate(), 5), "qty": 1}]
