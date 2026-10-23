@@ -213,7 +213,7 @@ frappe.ui.form.on("Purchase Order", {
 		frm.fields_dict.items.grid.update_docfield_property(
 			"add_schedule",
 			"hidden",
-			frm.is_new() || frm.doc.docstatus !== 0
+			frm.doc.docstatus !== 1
 		);
 	},
 });
@@ -222,7 +222,10 @@ frappe.ui.form.on("Purchase Order Item", {
 	add_schedule(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 
-		if (row.__islocal || frm.is_dirty()) {
+		if (frm.doc.docstatus !== 1) {
+			frappe.throw(__("Please submit the Purchase Order before adding a purchase receipt schedule."));
+		}
+		if (frm.is_dirty()) {
 			frappe.throw(__("Please save the Purchase Order before adding a purchase receipt schedule."));
 		}
 

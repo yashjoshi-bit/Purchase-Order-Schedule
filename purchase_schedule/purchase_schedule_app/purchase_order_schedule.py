@@ -6,9 +6,12 @@
 Mirrors ERPNext's Sales Order "Delivery Schedule" (Delivery Schedule Item), but for
 Purchase Order, implemented through hooks (no core override):
 
-- get_purchase_schedule / create_purchase_schedule: whitelisted, used by the Add Schedule dialog.
-- validate_scheduled_qty: Purchase Order `validate` — scheduled qty must not exceed item qty.
-- delete_removed_schedule_items: Purchase Order `on_submit` — drop rows of removed items.
+- get_purchase_schedule / create_purchase_schedule: whitelisted, used by the Add Schedule dialog
+  on a submitted Purchase Order.
+- validate_scheduled_qty: Purchase Order `validate` / `before_update_after_submit` (Update Items)
+  — scheduled qty must not exceed item qty.
+- delete_removed_schedule_items: Purchase Order `on_submit` / `on_update_after_submit`
+  — drop rows of removed items.
 - delete_all_schedule_items: Purchase Order `on_cancel` / `on_trash`.
 """
 
@@ -35,10 +38,11 @@ def get_purchase_schedule(purchase_order: str, purchase_order_item: str) -> list
 
 @frappe.whitelist(methods=["POST"])
 def create_purchase_schedule(purchase_order: str, purchase_order_item: str, schedules) -> None:
-	"""Replace the schedule of one draft Purchase Order Item with `schedules`.
+	"""Replace the schedule of one submitted Purchase Order Item with `schedules`.
 
 	`schedules` is a list of {"schedule_date", "qty", "name" (optional, existing row)}.
-	Sets the item's Required By date to the earliest scheduled date and saves the PO.
+	Sets the item's Required By date (allow on submit) to the earliest scheduled date
+	and saves the PO as an update-after-submit.
 	"""
 	if isinstance(schedules, str):
 		schedules = parse_json(schedules)
@@ -46,8 +50,8 @@ def create_purchase_schedule(purchase_order: str, purchase_order_item: str, sche
 	po = frappe.get_doc("Purchase Order", purchase_order)
 	po.check_permission("write")
 
-	if po.docstatus != 0:
-		frappe.throw(_("Schedule can only be changed while the Purchase Order is in draft."))
+	if po.docstatus != 1:
+		frappe.throw(_("Schedule can only be added after the Purchase Order is submitted."))
 
 	item = next((d for d in po.items if d.name == purchase_order_item), None)
 	if not item:

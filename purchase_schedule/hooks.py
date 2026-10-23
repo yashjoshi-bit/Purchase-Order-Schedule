@@ -158,7 +158,9 @@ doctype_js = {"Purchase Order": "public/js/purchase_order.js"}
 doc_events = {
 	"Purchase Order": {
 		"validate": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.validate_scheduled_qty",
+		"before_update_after_submit": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.validate_scheduled_qty",
 		"on_submit": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_removed_schedule_items",
+		"on_update_after_submit": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_removed_schedule_items",
 		"on_cancel": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_all_schedule_items",
 		"on_trash": "purchase_schedule.purchase_schedule_app.purchase_order_schedule.delete_all_schedule_items",
 	}

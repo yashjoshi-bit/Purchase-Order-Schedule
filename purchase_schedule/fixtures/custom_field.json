@@ -11,6 +11,7 @@
   "name": "Purchase Order Item-purchase_order_schedule_section"
  },
  {
+  "allow_on_submit": 1,
   "doctype": "Custom Field",
   "dt": "Purchase Order Item",
   "fieldname": "add_schedule",

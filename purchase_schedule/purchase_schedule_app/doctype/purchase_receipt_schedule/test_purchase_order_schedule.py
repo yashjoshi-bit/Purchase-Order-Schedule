@@ -1,7 +1,10 @@
 # Copyright (c) 2026, yash joshi and Contributors
 # See license.txt
 
+import json
+
 import frappe
+from erpnext.controllers.accounts_controller import update_child_qty_rate
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, getdate, nowdate
 
@@ -24,7 +27,7 @@ class TestPurchaseOrderSchedule(IntegrationTestCase):
 	ITEM = "_Test Item"
 	WAREHOUSE = "_Test Warehouse - _TC"
 
-	def make_po(self, qty=10, items=1):
+	def make_po(self, qty=10, items=1, submit=True):
 		po = frappe.new_doc("Purchase Order")
 		po.company = self.COMPANY
 		po.supplier = self.SUPPLIER
@@ -43,6 +46,8 @@ class TestPurchaseOrderSchedule(IntegrationTestCase):
 			)
 		po.set_missing_values()
 		po.insert()
+		if submit:
+			po.submit()
 		return po
 
 	def schedule(self, po, item, rows):
@@ -132,49 +137,54 @@ class TestPurchaseOrderSchedule(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			create_purchase_schedule(po.name, "not-a-row", [{"schedule_date": nowdate(), "qty": 1}])
 
-	def test_reducing_item_qty_below_schedule_blocks_save(self):
+	def update_items(self, po, rows):
+		"""Run ERPNext's "Update Items" on a submitted PO."""
+		update_child_qty_rate("Purchase Order", json.dumps(rows), po.name)
+		po.reload()
+
+	def item_row(self, item, qty=None):
+		return {
+			"docname": item.name,
+			"item_code": item.item_code,
+			"qty": qty if qty is not None else item.qty,
+			"rate": item.rate,
+			"conversion_factor": item.conversion_factor,
+			"schedule_date": str(item.schedule_date),
+		}
+
+	def test_draft_po_is_rejected(self):
+		po = self.make_po(qty=10, submit=False)
+		with self.assertRaises(frappe.ValidationError):
+			create_purchase_schedule(
+				po.name, po.items[0].name, [{"schedule_date": add_days(nowdate(), 5), "qty": 1}]
+			)
+		self.assertEqual(self.count_rows(po), 0)
+
+	def test_update_items_cannot_reduce_qty_below_schedule(self):
 		po = self.make_po(qty=10)
 		self.schedule(po, po.items[0], [{"schedule_date": add_days(nowdate(), 5), "qty": 8}])
 
-		po.items[0].qty = 5
 		with self.assertRaises(frappe.ValidationError):
-			po.save()
+			self.update_items(po, [self.item_row(po.items[0], qty=5)])
 
-	def test_submit_drops_rows_of_removed_items_and_locks_schedule(self):
+	def test_update_items_removing_item_drops_its_schedule(self):
 		po = self.make_po(qty=10, items=2)
 		self.schedule(po, po.items[0], [{"schedule_date": add_days(nowdate(), 5), "qty": 4}])
 		self.schedule(po, po.items[1], [{"schedule_date": add_days(nowdate(), 5), "qty": 4}])
 		removed = po.items[1].name
 
-		po.remove(po.items[1])
-		po.save()
-		po.submit()
+		self.update_items(po, [self.item_row(po.items[0])])
 
 		self.assertEqual(self.count_rows(po), 1)
 		self.assertFalse(
 			frappe.db.exists(SCHEDULE_DOCTYPE, {"purchase_order": po.name, "purchase_order_item": removed})
 		)
 
-		with self.assertRaises(frappe.ValidationError):
-			create_purchase_schedule(
-				po.name, po.items[0].name, [{"schedule_date": add_days(nowdate(), 5), "qty": 1}]
-			)
-
 	def test_cancel_deletes_all_rows(self):
 		po = self.make_po(qty=10)
 		self.schedule(po, po.items[0], [{"schedule_date": add_days(nowdate(), 5), "qty": 4}])
-		po.submit()
 		po.cancel()
 
-		self.assertEqual(self.count_rows(po), 0)
-
-	def test_delete_draft_po_with_schedule(self):
-		po = self.make_po(qty=10)
-		self.schedule(po, po.items[0], [{"schedule_date": add_days(nowdate(), 5), "qty": 4}])
-
-		frappe.delete_doc("Purchase Order", po.name)
-
-		self.assertFalse(frappe.db.exists("Purchase Order", po.name))
 		self.assertEqual(self.count_rows(po), 0)
 
 	def test_requires_write_permission_on_po(self):
